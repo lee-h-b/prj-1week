@@ -16,7 +16,7 @@ using UnityEngine.UI;
 public class CharaSelect : MonoBehaviour {
     public Transform spinModel;//도는 모델 단순히 메쉬를 바꾸는것부터 트랜스폼 자체를 대입받는식 2가지가 있겠음
     //ㄴ 그냥 부모로 잡기로함
-    public List<GameObject> characters;
+
 
     public Transform imgZone;//이미지 놓을곳
     public Transform memberImgZone;//멤버 이미지's
@@ -36,6 +36,7 @@ public class CharaSelect : MonoBehaviour {
 
         for(int i = 0; i < memberImgZone.childCount; i++)
         {
+            Debug.Log(i);
             Sprite img = GameManager.inst.GetImg(i);
             memberImgZone.GetChild(i).Find("Image").GetComponent<Image>().sprite = img;
             string name = GameManager.inst.GetName(i);
@@ -47,7 +48,7 @@ public class CharaSelect : MonoBehaviour {
     //영입버튼을 담당
     public void AddMember()
     {        
-        GameManager.inst.AddMember(characters[cur]);
+        GameManager.inst.AddMember(cur);
         DrawMember();
     }
     //멤버제외 << 영입이나 제외나 이미지를 드래그 드랍하는식으로 하는게 세련되보일것
@@ -56,47 +57,28 @@ public class CharaSelect : MonoBehaviour {
         GameManager.inst.DelMember();
         DrawMember();
     }
-    //캐릭터들 가져옴
-    public void GetAllChara()
+
+    //이미지들을 생성 + 클릭시 이벤트 동적할당
+    public void SummonImg()
     {
-        //        string[] inFiles2 = Directory.GetFiles(Application.dataPath + "/Resources/Chara");
-        //LoadAll로 결정 이유는 짧아서 그리고 빌드할때도 이게 나을지도?
-
-        if (path == null) return;
-
-        var loadData = Resources.LoadAll("Chara");
-        Debug.Log(Resources.LoadAll("Chara").Length);
-        Debug.Log(loadData.Length);
-        for(int i = 0; i < loadData.Length; i++)
+        for (int i = 0; i < GameManager.inst.characters.Count; i++)
         {
-            characters.Add(loadData[i] as GameObject);
-            Debug.Log(characters[i]);
-            SummonImg(characters[i].GetComponent<CharaScript>() );
+            GameObject temp;
+            if (img == null)//만약 이미지가 없을경우
+            {
+                var go = new GameObject();
+                temp = Instantiate(go, imgZone);
+                temp.AddComponent<RectTransform>();
+                temp.AddComponent<CanvasRenderer>();
+                temp.AddComponent<Button>();
+                temp.AddComponent<Image>();
+                Destroy(go);
+            }
+            else temp = Instantiate(img, imgZone);
+            
+            temp.GetComponent<Button>().onClick.AddListener(() => SelectImg(temp.transform));
+            temp.GetComponent<Image>().sprite = GameManager.inst.characters[i].GetComponent<CharaScript>().Info.image;
         }
-    }
-    //이미지들을 소환 + 클릭시 이벤트 동적할당
-    public void SummonImg(CharaScript chara)
-    {
-        GameObject temp;
-        if (img == null)//만약 이미지가 없을경우
-        {
-            var go = new GameObject();
-            temp = Instantiate(go, imgZone);
-            temp.AddComponent<RectTransform>();
-            temp.AddComponent<CanvasRenderer>();
-            temp.AddComponent<Button>();
-            temp.AddComponent<Image>();
-            Destroy(go);
-        }
-        
-        else temp = Instantiate(img, imgZone);
-
-        var tempimg = temp.GetComponent<Image>();
-        Button b = temp.GetComponent<Button>();
-        Transform test = temp.transform;
-        b.onClick.AddListener(() => SelectImg(test));
-
-        tempimg.sprite = chara.Info.image;
     }
 
     //이미지 클릭하면 행하는 이벤트
@@ -111,6 +93,7 @@ public class CharaSelect : MonoBehaviour {
             WriteCharaInfo();
         }
     }
+    
     //이건 이미지 클릭하면 호출할것
     public void ChangeModelObject()
     {
@@ -118,13 +101,13 @@ public class CharaSelect : MonoBehaviour {
         if (spinModel.childCount > 0)
             for (int i = 0; i < spinModel.childCount; i++)
                 Destroy(spinModel.GetChild(i).gameObject );
-        //오브젝트를 새로 복제해서 넣어줌
-        Instantiate(characters[cur], spinModel);
+        //오브젝트를 새로 복제해서 넣어줌 
+        Instantiate(GameManager.inst.characters[cur], spinModel);
     }
     //캐릭터의 정보,이름등을 써놓기맨
     public void WriteCharaInfo()
     {
-        var info = characters[cur].GetComponent<CharaScript>().Info;
+        var info = GameManager.inst.characters[cur].GetComponent<CharaScript>().Info;
         board.text = "이름 : " + info.charaName +"\n";
         board.text += "체력 : " + info.hp + "\n";
         board.text += "공격력 : " + info.atk + "\n";
@@ -138,8 +121,9 @@ public class CharaSelect : MonoBehaviour {
         if (imgZone == null) imgZone = transform.Find("SeletView").Find("Viewport").Find("Content");
         if (board == null) board = transform.Find("Explanation").GetChild(0).GetComponent<Text>();
         if (memberImgZone == null) memberImgZone = transform.Find("MemberImg");
-        GetAllChara();
-        cur = characters.Count;//커서의 기본값을 카운트로 꾀한다
+        //        GetAllChara();
+        SummonImg();
+        cur = GameManager.inst.characters.Count;//커서의 기본값을 카운트로 꾀한다
         DrawMember();
     }
 	

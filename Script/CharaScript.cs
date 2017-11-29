@@ -46,7 +46,13 @@ public class CharaScript : MonoBehaviour {
     [SerializeField]
     //필요하면 이걸 Status라는 이름으로 넘길수도 있겠다
     //배틀할때 이걸 그대로 쓸거임
+
     private CharaScriptable info;//나의 정보
+
+    [SerializeField]
+    private List<OrderScriptableObj> orders;//내가 받은 명령들 
+    private int maxOrder = 3;
+
     //세분해서 겟하게 하면 좋긴 할텐데 말이지
     public CharaScriptable Info
     {
@@ -55,12 +61,25 @@ public class CharaScript : MonoBehaviour {
             return info;
         }
     }
-        
-	// Use this for initialization
-    void Write()
+    
+    public void AddOrder(OrderScriptableObj order)
     {
-
+        for(int i = 0; i < maxOrder; i++)
+        {
+            if(orders[i] == null)
+            {
+                orders.Add(order);
+                break;
+            }
+        }
     }
+    //클릭하면 행할거임
+    public void DelOrder(int cur)
+    {
+        if (cur >= maxOrder) return;
+        orders[cur] = null;
+    }
+	// Use this for initialization
 	void Start () {
         /*
         if (charaPath == null) charaPath = "CharaDB";
