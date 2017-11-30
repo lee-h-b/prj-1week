@@ -34,10 +34,17 @@ public class Ground : MonoBehaviour {
             {
                 //로테이션까지하기 번거로우니깐 부모위치로 해서 위치등을 동기화시키고 해제함
                 var obj = Instantiate(GameManager.inst.characters[num],temp.GetChild(i));
-                if(p2 == false)
+                if (p2 == false)
+                {
+                    PartyManager.inst.AddMember(obj.GetComponent<CharaScript>());
                     obj.transform.SetParent(pPos1);
+//                    obj.transform.SetParent(null);
+                }
                 else
-                    obj.transform.SetParent(pPos2);
+                {
+                    PartyManager.inst.AddMember(obj.GetComponent<CharaScript>() , 2);
+//                    obj.transform.SetParent(pPos2);
+                }
 
             }
         }

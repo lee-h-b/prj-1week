@@ -12,7 +12,10 @@ public class OrderScript : MonoBehaviour {
     
     [SerializeField]
     OrderScriptableObj order;//스킬의 정보 이거는 커맨드창에서 할당해줄것
-
+    public OrderScriptableObj Order
+    {
+        get { return order; }
+    }
 
     [SerializeField]
     GameObject user;//사용할 사람

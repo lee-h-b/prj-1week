@@ -35,26 +35,40 @@ public class OrderScriptableObj : ScriptableObject {
     public void Move(GameObject master)
     {
         //여기서 애니메이션 관리?
-
+        Debug.Log("움지김");
         bool up, right;
-        if (x < 0) up = false;
-        else up = true;
-        if (y < 0) right = false;
+        if (x < 0) right = false;
         else right = true;
+        if (y < 0) up = false;
+        else up = true;
 
         //혹시모르니 새로만듬
-        Vector3 period = new Vector3(master.transform.position.x,0,master.transform.position.z);
+        Vector3 period = new Vector3(master.transform.position.x,master.transform.position.y,master.transform.position.z);
         Vector3 start = master.transform.position;
         for(int i = 0; i < Mathf.Abs(x); i++)
         {
             //x축으로 끝까지감
-            if (right && period.x + envi.gridSize > envi.maxX)
+            if (right && period.x + envi.gridSize < envi.maxX)
+            {
+                Debug.Log(">>doit");
+
                 period.x += envi.gridSize;
-            //x축으로 맨 왼쪽까지감
-            else if(right == false && period.x -envi.gridSize < -envi.maxX)
+            }
+            //x축으로 맨 왼쪽까지감 -65 < -50
+            else if (right == false && (period.x - envi.gridSize) > -envi.maxX)
+            {
+                Debug.Log("<<doit");
                 period.x -= envi.gridSize;
+            }
+            Debug.Log(envi.gridSize);
+            Debug.Log("엔비 최대X" + envi.maxX);
+            Debug.Log(" << ? : " + (period.x - envi.gridSize));
+            Debug.Log((bool)(period.x - envi.gridSize < envi.maxX) + " < 참거짓여부");
+            Debug.Log("right ? : " + right + " period.x? " + period.x);
+            //필리오드와 스타트가 동일..
+
         }
-        for(int i = 0; i < Mathf.Abs(y); i++)
+        for (int i = 0; i < Mathf.Abs(y); i++)
         {
             if (up && period.z + envi.gridSize > envi.maxY)
                 period.z += envi.gridSize;
@@ -63,5 +77,6 @@ public class OrderScriptableObj : ScriptableObject {
         }
         //TODO : 도착했는데 겹치는일이 생긴다면 다른곳으로 이동해야할것
         master.transform.position = Vector3.Lerp(start,period, 20f);//20은 수정가능
+        //델타타임 박으면 실행이 이쁘지않음 참고
     }
 }

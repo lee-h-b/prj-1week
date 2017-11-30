@@ -68,7 +68,8 @@ public class CharaScript : MonoBehaviour {
         {
             if(orders[i] == null)
             {
-                orders.Add(order);
+                orders[i] = order;
+                
                 break;
             }
         }
@@ -78,6 +79,11 @@ public class CharaScript : MonoBehaviour {
     {
         if (cur >= maxOrder) return;
         orders[cur] = null;
+    }
+    public void ActionOrder()//cur를 안받고 그냥함 맨앞에꺼니깐 이걸 지우고 밀어넣고할듯
+    {
+        orders[0].Action(this.gameObject);
+        orders.RemoveAt(0);//이걸로될지?
     }
 	// Use this for initialization
 	void Start () {
