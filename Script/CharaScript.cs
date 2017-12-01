@@ -83,7 +83,8 @@ public class CharaScript : MonoBehaviour {
     public void ActionOrder()//cur를 안받고 그냥함 맨앞에꺼니깐 이걸 지우고 밀어넣고할듯
     {
         orders[0].Action(this.gameObject);
-        orders.RemoveAt(0);//이걸로될지?
+        orders.RemoveAt(0);//이걸로될지? < 안됐음 사이즈를 아예줄여서 2번째부터 오류남
+        orders.Add( null );//그래서 사용하고 다시 빈공간을 추가함으로써 순환시킴
     }
 	// Use this for initialization
 	void Start () {

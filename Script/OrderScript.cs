@@ -26,10 +26,12 @@ public class OrderScript : MonoBehaviour {
 	void Start () {
         if (GetComponent<Image>().sprite == null) GetComponent<Image>().sprite = img;
         order.envi = GameManager.inst.mapEnvi;
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
+        if (order as AttackScriptable != null)
+            (order as AttackScriptable).test(this.gameObject);
 	}
 }

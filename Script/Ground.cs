@@ -38,12 +38,14 @@ public class Ground : MonoBehaviour {
                 {
                     PartyManager.inst.AddMember(obj.GetComponent<CharaScript>());
                     obj.transform.SetParent(pPos1);
+                    obj.tag = "P1";
 //                    obj.transform.SetParent(null);
                 }
                 else
                 {
                     PartyManager.inst.AddMember(obj.GetComponent<CharaScript>() , 2);
-//                    obj.transform.SetParent(pPos2);
+                    obj.tag = "P2";
+                    //                    obj.transform.SetParent(pPos2);
                 }
 
             }

@@ -96,13 +96,14 @@ public class ComandTable : MonoBehaviour {
         }
     }
     //해당탭 청소용
-    public void OrderClear()
+    public void OrderClear(bool force =false)
     {
         var path = memberTab[cur].Find("PickOrders");
         for(int i =0; i < path.childCount; i++)
         {
             if (path.GetChild(i).GetComponent<Image>().sprite != null)
             {
+                if(force == false)
                 PartyManager.inst.DelOrder(cur, i);
                 //이미지지움
                 path.GetChild(i).GetComponent<Image>().sprite = null;
@@ -128,6 +129,7 @@ public class ComandTable : MonoBehaviour {
             }
         }
         Debug.Log("됭");
+        OrderClear(true);
         TurnManager.inst.ActionTurn();
     }
     void Start () {

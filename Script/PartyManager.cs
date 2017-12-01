@@ -27,6 +27,7 @@ public class PartyManager : MonoBehaviour {
         List<CharaScript> member;
         if (playerCur % 2 == 1) member = p1Members;
         else member = p2Members;
+        Debug.Log("cur = " + cur);
         p1Members[cur].AddOrder(order);
     }
     //걍 addOrder복붙 +수정
