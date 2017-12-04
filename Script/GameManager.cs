@@ -15,14 +15,23 @@ public class GameManager : MonoBehaviour {
 
     public Envi mapEnvi;//그라운드를 인스턴스 시키는것보단 이게 낫다고 판단 그라운드가 대입시켜줌
 
+    [SerializeField]
+    protected SaveData playerInfo;
+
     static public GameManager inst;
     
     // Use this for initialization
+    public SaveData PlayerInfo
+    {
+        get { return playerInfo; }
+    }
     //멤버추가 캐릭에서 스크립트가 있늕지 보고 있음 따오는식
     public List<int> PlayerMember
     {
         get { return playerMember; }
     }
+    public int MaxMember
+    { get { return maxMember; } }
     public void AddMember(int cur)
     {
         if (playerMember.Count >= maxMember ) return;
@@ -79,11 +88,18 @@ public class GameManager : MonoBehaviour {
 
         return characters[playerMember[cur] - 1].GetComponent<CharaScript>().Info.charaName;
     }
-
+    public void ReStart()
+    {
+        Scene loadLevel = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(loadLevel.buildIndex);//씬다시부르기?
+    }
     void Awake()
     {
         if (inst == null) inst = this;
-        DontDestroyOnLoad(this);
+        else if (inst != null) Destroy(gameObject);
+
+            //1개만 돈트 디스트로이하길
+            if (this == inst) DontDestroyOnLoad(this);
         GetAllOrder();
         GetAllChara();
     }

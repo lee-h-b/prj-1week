@@ -14,8 +14,8 @@ public class Ground : MonoBehaviour {
     //최대위치,최소위치도 필요할까?
     public Envi envi;
     Transform Spawn1, Spawn2;
-    Transform pPos1, pPos2;
 	// Use this for initialization
+    //캐릭소환술 
     void CharaSpawn(List<int> charaCode, bool p2 = false)
     {
         Transform temp;
@@ -37,7 +37,7 @@ public class Ground : MonoBehaviour {
                 if (p2 == false)
                 {
                     PartyManager.inst.AddMember(obj.GetComponent<CharaScript>());
-                    obj.transform.SetParent(pPos1);
+//                    obj.transform.SetParent(pPos1);
                     obj.tag = "P1";
 //                    obj.transform.SetParent(null);
                 }
@@ -47,22 +47,24 @@ public class Ground : MonoBehaviour {
                     obj.tag = "P2";
                     //                    obj.transform.SetParent(pPos2);
                 }
-
             }
         }
     }
-	void Start () {
+    void Awake()
+    {
+
         if (Spawn1 == null) Spawn1 = transform.Find("Pos").Find("Left");
+        CharaSpawn(GameManager.inst.PlayerMember, false);//명령넣을때 보여줘야 하기에 미리만듬
+    }
+	void Start () {
         if (Spawn2 == null) Spawn2 = transform.Find("Pos").Find("Right");
-        if (pPos1 == null) pPos1 = GameObject.Find("P1").transform;
-        if (pPos2 == null) pPos2 = GameObject.Find("P2").transform;
         //5를 노림ㅎ
         envi.maxX = (int)transform.localScale.x * transform.Find("Row1").childCount;
         envi.maxY = (int)transform.localScale.z * transform.Find("Row1").childCount;
         envi.gridSize = (int)transform.localScale.x * 2;
         GameManager.inst.mapEnvi = envi;
-        CharaSpawn(GameManager.inst.PlayerMember, false);
-        CharaSpawn(GameManager.inst.PlayerMember,true);
+
+        CharaSpawn(PartyManager.inst.GetComponent<AIchan>().memberCode,true);
 	}
 	
 	// Update is called once per frame

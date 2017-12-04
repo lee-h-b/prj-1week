@@ -43,11 +43,30 @@ public class PartyManager : MonoBehaviour {
     public void AddMember(CharaScript member, int pC =1)
     {
         if (pC % 2 == 1)
-        {
+        {           
             p1Members.Add(member);
         }
         else
             p2Members.Add(member);
+    }
+    //멤버가 전부 죽었는지 P1부터 돌려보기
+    public int CheckMemberAnnihilation()
+    {
+        bool liveGauger = true;
+        for(int i = 0; i < p1Members.Count; i++)
+        {
+            if (p1Members[i].Dead == false) liveGauger = false;
+            //만약 1명이라도 살아있다면 liveGauger는 거짓이될거임
+        }
+        if (liveGauger == true) return 2;//2가 이겼엉
+        liveGauger = true;
+        for (int i = 0; i < p2Members.Count; i++)
+        {
+            if (p2Members[i].Dead == false) liveGauger = false;
+        }
+
+        if (liveGauger == true) return 1;//1이 이김
+        return 0;//암도안이김
     }
     void Awake()
     {

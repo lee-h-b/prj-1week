@@ -6,7 +6,7 @@ using UnityEngine;
 public class AttackScriptable : OrderScriptableObj {
     enum DIAGONAL { None, Only,Both }
     enum DIRECTION { None, Both}
-    public int Dmg;
+    public int dmg;
     //대각선이문제 십자는 뭐 양방향인지 아닌지를 넣는다고치고
     //대각선은 어떻게 구현할것? 간단하게 참이면 좀 꺾어서 하는건? 불안전할듯 데미지를 어떻게 줄지?
     //빈오브젝트(아마 이펙트?)를 복제해서 넣고 소멸시킬듯 
@@ -47,7 +47,7 @@ public class AttackScriptable : OrderScriptableObj {
     GameObject HittedObj;//여기서 맞았던 오브젝을 치울수도있음
     public void test(GameObject master)
     {
-        Vector3 startPos = new Vector3(master.transform.position.x, 0, master.transform.position.z);
+        Vector3 startPos = new Vector3(master.transform.position.x, 0f, master.transform.position.z);
         Vector3 var = master.transform.right * (120);
 
         Ray up = new Ray(startPos, master.transform.forward * 20f );
@@ -74,12 +74,15 @@ public class AttackScriptable : OrderScriptableObj {
     //상황에따라서는 여기 ray분류에서 역방향을 따로 구해줘야한다
     public override void Action(GameObject master)
     {
-        if(Moveable == true)//아예 안쓸거같은데뭐
-        base.Action(master);
+        //마나체크
+        if (cost >= master.GetComponent<CharaScript>().Status.mp) return;
+
+        master.GetComponent<CharaScript>().PayMp(cost);
+           
         var xSync = master.transform.position.x;
         if (master.tag == "P1") xSync += 5;//x의 차이에 따라 대각선의 값이 약간 바뀜 따라서 태그에따라
         else if (master.tag == "P2") xSync -= 5;//값의차이를 동기화? 시켜줌
-        Vector3 startPos = new Vector3(xSync, 0, master.transform.position.z);
+        Vector3 startPos = new Vector3(xSync, 0, master.transform.position.z);//기존 1에서 0ㅇ,로바꿈 닿은게 타일이면 파티클터지게
         //높이에 영향을 주는 y는 필요없음
         //레이에 담아서 반복문을 통해 레이를 쏘게하면 지장이 없을까?
         //ray[0],ray[0] *50f 이렇게 할테고 이미 쏠 방향은 정해뒀기에 지장은 없다고봄 즉 여긴 방향의 설정임
@@ -89,56 +92,98 @@ public class AttackScriptable : OrderScriptableObj {
         //만약 X가 0보다 크거나 양방향일경우
         if ((x != 0) && (diago == DIAGONAL.None || diago == DIAGONAL.Both))
         {
-            rays.Add(new Ray(startPos, master.transform.right));//오른쪽방향레이추가
-            dist.Add(x * envi.gridSize +envi.gridSize +10);//ray의 길이를 설정
+            rays.Add(new Ray(startPos, master.transform.forward));
+            dist.Add(x * envi.gridSize );//ray의 길이를 설정 //전에는 보정으로 +10이던가 +gridsize했는데 할필요X
         }
         //반대방향은 나중에 direc == DIRECTION.BOTH면함 -던 +던 한방향을하고 BOTH의 경우 반대방향도 포함하는식임
         //8개 -> 4개로 줄어드는 이득
         if ((y != 0) && (diago == DIAGONAL.None || diago == DIAGONAL.Both))
         {
-            rays.Add(new Ray(startPos, master.transform.forward));
-            dist.Add(y * envi.gridSize + envi.gridSize + 10);
+            rays.Add(new Ray(startPos, master.transform.right));//오른쪽방향레이추가
+            dist.Add(y * envi.gridSize  );
         }
         //대각선은 우측으로 45도 돌린거임
         if ((x != 0) && (diago == DIAGONAL.Only || diago == DIAGONAL.Both))//만약 대각선이고 x가 있다면
         {
-            rays.Add(new Ray(startPos, diagonal * master.transform.right));
+            rays.Add(new Ray(startPos, diagonal * master.transform.forward));
             dist.Add(x * envi.gridSize + envi.gridSize );
         }
         if ((y != 0) && (diago == DIAGONAL.Only || diago == DIAGONAL.Both))
         {
-            rays.Add(new Ray(startPos, diagonal * master.transform.forward));
+            rays.Add(new Ray(startPos, diagonal * master.transform.right));
             dist.Add(y * envi.gridSize + envi.gridSize );
         }//대각선은 공식을 달리 해야할까?
 
+        //만약 내가 있던곳도 데미지를 줄거면 << 데미지 계산
+        if (safeStart == false)
+        {
+            var overlap = Physics.OverlapBox(master.transform.position, new Vector3(envi.gridSize / 4, envi.gridSize / 2, envi.gridSize / 4));
+            for(int i = 0; i < overlap.Length; i++)
+            {
+                if(overlap[i].gameObject.tag != master.tag && overlap[i].gameObject.GetComponent<CharaScript>() )
+                {
+                    overlap[i].gameObject.GetComponent<CharaScript>().GetDamage(dmg + master.GetComponent<CharaScript>().Status.atk);
+                }                    
+            }
+        }
         for(int i = 0; i < rays.Count; i++)
         {
 
             RaycastHit[] forwardHits;//앞만되고 추가가 안되서 아래만듬
             RaycastHit[] backHits = null;//뒤에맞춘애들ㅎ
-            //문제 x의 사이즈를 어떻게 찝을거니??
             forwardHits = Physics.RaycastAll(rays[i],dist[i]);
             if (direc == DIRECTION.Both)
             {
                 var r_Ray = rays[i];//dist가 음수로 안되길래 이렇게했음
                 r_Ray.direction = -r_Ray.direction ;
                 backHits = Physics.RaycastAll(r_Ray, dist[i]);//거리를 반대로 함으로써 반대편을 얻음을꾀한다
-                Debug.Log(backHits.Length);
+                for(int j = 0; j < backHits.Length; j++)
+                {
+                    if (backHits[j].transform.GetComponent<TileScript>() != null && master.GetComponent<CharaScript>().particle != null)
+                    {
+                        var temp = Instantiate(master.GetComponent<CharaScript>().particle, backHits[j].transform);
+                        if (master.tag == "P1")
+                        {
+                            var sc = temp.GetComponent<ParticleSystem>().main;
+                            sc.startColor = Color.blue;
+                        }
+                        Destroy(temp.gameObject, 2f);
+                    }
+                    if (backHits[j].transform.GetComponent<CharaScript>() != null && backHits[j].transform.tag != master.tag)
+                    {
+                        backHits[j].transform.GetComponent<CharaScript>().GetDamage(dmg + master.GetComponent<CharaScript>().Status.atk);
+                    }
+                }
             }
             for(int j = 0; j < forwardHits.Length; j++)
             {
 
-                Debug.DrawLine(rays[i].origin, forwardHits[j].point,Color.black,30f);
-                if (direc == DIRECTION.Both)//이게참이면 백과 전방의 비율은 1:1이다
+                if (forwardHits[j].transform.GetComponent<TileScript>() != null && master.GetComponent<CharaScript>().particle != null)
                 {
-                    Debug.Log(backHits[j].transform.gameObject.name + " " + backHits[j].transform.parent);
-                    Debug.Log(backHits.Length);
-                    //                    Debug.Log("Bhits : i" + backHits[j].transform.name);
-                    Debug.DrawLine(rays[i].origin, backHits[j].point, Color.green, 30f);
+                    var temp = Instantiate(master.GetComponent<CharaScript>().particle, forwardHits[j].transform);
+                    if (master.tag == "P1")
+                    {
+                        var sc = temp.GetComponent<ParticleSystem>().main;
+                        sc.startColor = Color.blue;
+                    }
+
+                        Destroy(temp.gameObject, 2f);
 
                 }
+                if (forwardHits[j].transform.GetComponent<CharaScript>() != null && forwardHits[j].transform.tag != master.tag )
+                {
+                    forwardHits[j].transform.GetComponent<CharaScript>().GetDamage(dmg + master.GetComponent<CharaScript>().Status.atk);
+                }
+                    
+//                    Debug.Log(backHits[j].transform.gameObject.name + " " + backHits[j].transform.parent);
+ //                   Debug.Log(backHits.Length);
+                    //                    Debug.Log("Bhits : i" + backHits[j].transform.name);
+//                    Debug.DrawLine(rays[i].origin, backHits[j].point, Color.green, dist[j]);
+                    
             }
         }
+        if (Moveable == true)
+            base.Action(master);
 
 
     }

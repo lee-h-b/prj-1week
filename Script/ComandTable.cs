@@ -42,11 +42,39 @@ public class ComandTable : MonoBehaviour {
 
         memberTab[cur].Find("PickOrders").gameObject.SetActive(false);
         memberTab[val].Find("PickOrders").gameObject.SetActive(true);
+        //여기서 체력,마력을 간접적으로 보여줌 갱신은? 다른곳에서 할듯
+        memberTab[cur].Find("Hp").gameObject.SetActive(false);
+        memberTab[cur].Find("Mp").gameObject.SetActive(false);
+
+
+        memberTab[val].Find("Hp").gameObject.SetActive(true);
+        memberTab[val].Find("Mp").gameObject.SetActive(true);
         SetBoard();
         cur = val;
 
     }
+    //죽은건 1인데 빼는건 다른번호가됨
+    //멤버가 죽었는가 체크 참이면 멤버탭에서 제외
+    //1번만 하면되고 갱신을 이 창이 재활성 될때마다 하면되니 enable에서함 
+    public void DisableMemberCheck()
+    {
+        for(int i = 0; i < PartyManager.inst.Member1.Count; i++)
+        {
+            if(PartyManager.inst.Member1[i].Dead == true)
+            {
+                memberTab[i].gameObject.SetActive(false);
+                //cur를 바꿔서 활성을 바꿈
 
+                if (cur == i) cur++;
+                if (cur >= PartyManager.inst.Member1.Count) cur = 0;
+                memberTab[cur].Find("PickOrders").gameObject.SetActive(true);//혹시 모르니 활성화
+                //ㄴ 문제 그아래 자식은 활성화가 안되있음
+            }
+//            else
+  //              memberTab[i].gameObject.SetActive(true);
+
+        }
+    }
     //스킬 놓기 추가,변경의 가능성 매우 높음
     void SetBoard()
     {
@@ -73,8 +101,12 @@ public class ComandTable : MonoBehaviour {
             {
                 //이렇게 이미지만넣어줌
                 path.GetChild(i).GetComponent<Image>().sprite = order.GetComponent<OrderScript>().img;
+                //명령은 멤버에게
                 PartyManager.inst.AddOrder(order.GetComponent<OrderScript>().Order,cur);
-//                order.SetActive(false); 해당명령을 2번못하게하는건데 완성하고 여유되면
+                //                order.SetActive(false); 해당명령을 2번못하게하는건데 일단 안함
+                //              여기에 인포이미지 그려주기
+                transform.Find("Explanation").GetComponent<OrderExplanation>().Write(order.GetComponent<OrderScript>());
+
                 break;
             }
             //스킬자체를 할당받음
@@ -98,15 +130,29 @@ public class ComandTable : MonoBehaviour {
     //해당탭 청소용
     public void OrderClear(bool force =false)
     {
-        var path = memberTab[cur].Find("PickOrders");
-        for(int i =0; i < path.childCount; i++)
+        Debug.Log(force);
+        if (force == false)
         {
-            if (path.GetChild(i).GetComponent<Image>().sprite != null)
+            var path = memberTab[cur].Find("PickOrders");
+            for (int i = 0; i < path.childCount; i++)
             {
-                if(force == false)
-                PartyManager.inst.DelOrder(cur, i);
-                //이미지지움
-                path.GetChild(i).GetComponent<Image>().sprite = null;
+                if (path.GetChild(i).GetComponent<Image>().sprite != null)
+                {
+                    PartyManager.inst.DelOrder(cur, i);
+                    //이미지지움
+                    path.GetChild(i).GetComponent<Image>().sprite = null;
+                }
+            }
+        }
+        else
+        {
+            for(int i = 0; i< 3; i++)
+            {
+                var path = memberTab[i].Find("PickOrders");
+                for(int j = 0; j < path.childCount; j++)
+                {
+                    path.GetChild(j).GetComponent<Image>().sprite = null;
+                }
             }
         }
     }
@@ -119,18 +165,34 @@ public class ComandTable : MonoBehaviour {
             //애초에 없었다면 넘어가기
             if (memberTab[i].gameObject.activeSelf == false) continue;
 
-            for (int j = 0; j < memberTab[i].childCount; j++)
+            for (int j = 0; j < memberTab[i].Find("PickOrders").childCount; j++)
             {
                 if (path.GetChild(j).GetComponent<Image>().sprite == null)
                 {
                     Debug.Log("안되");
-                    return;//없음안되지
+                    return;//스킬이없음안되지
                 }
             }
         }
+        gameObject.SetActive(false);
         Debug.Log("됭");
-        OrderClear(true);
+        OrderClear(true);//이게 전부 지우는게아니라 1개만지움 <<정확히는 이미지가 남는다
+        TurnManager.inst.GetComponent<AIchan>().SetSkill();
         TurnManager.inst.ActionTurn();
+    }
+    public void DrawHPMP()
+    {
+        for(int i = 0; i < PartyManager.inst.Member1.Count; i++)
+        {
+            //죽은캐릭은 클릭 자체를 못할거기에 예외처리는 일단 안함
+            float per = (float)PartyManager.inst.Member1[i].Status.hp / (float)PartyManager.inst.Member1[i].MaxHp;
+            memberTab[i].Find("Hp").Find("Cur").GetComponent<Image>().fillAmount = per;
+            per = (float)PartyManager.inst.Member1[i].Status.mp / (float)PartyManager.inst.Member1[i].MaxMp;
+            memberTab[i].Find("Mp").Find("Cur").GetComponent<Image>().fillAmount = per;
+
+            memberTab[i].Find("Hp").Find("Cur").Find("Text").GetComponent<Text>().text = PartyManager.inst.Member1[i].Status.hp.ToString() + " / " + PartyManager.inst.Member1[i].MaxHp.ToString();
+            memberTab[i].Find("Mp").Find("Cur").Find("Text").GetComponent<Text>().text = PartyManager.inst.Member1[i].Status.mp.ToString() + " / " + PartyManager.inst.Member1[i].MaxMp.ToString();
+        }
     }
     void Start () {
         if (board == null) board = transform.Find("Board");
@@ -142,8 +204,15 @@ public class ComandTable : MonoBehaviour {
         if (GameManager.inst.PlayerMember.Count < 1) memberTab[0].gameObject.SetActive(false);
 
         SetBoard();
-	}
-	
+        DrawHPMP();
+
+    }
+    void OnEnable()
+    {
+        DisableMemberCheck();
+        //체력 마력 갱신 체력마력이 누를때마다 재정의 되는건 비효율적임
+        DrawHPMP();
+    }
 	// Update is called once per frame
 	void Update () {
 		

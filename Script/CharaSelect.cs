@@ -36,7 +36,6 @@ public class CharaSelect : MonoBehaviour {
 
         for(int i = 0; i < memberImgZone.childCount; i++)
         {
-            Debug.Log(i);
             Sprite img = GameManager.inst.GetImg(i);
             memberImgZone.GetChild(i).Find("Image").GetComponent<Image>().sprite = img;
             string name = GameManager.inst.GetName(i);
@@ -109,11 +108,17 @@ public class CharaSelect : MonoBehaviour {
     {
         var info = GameManager.inst.characters[cur].GetComponent<CharaScript>().Info;
         board.text = "이름 : " + info.charaName +"\n";
-        board.text += "체력 : " + info.hp + "\n";
-        board.text += "공격력 : " + info.atk + "\n";
-        board.text += "방어력 : " + info.def + "\n";
-        board.text += "스피드 : " + info.speed + "\n";
+        board.text += "체력 : " + info.Stat.hp + "\n";
+        board.text += "마나 : " + info.Stat.mp + "\n";
+        board.text += "공격력 : " + info.Stat.atk + "\n";
+        board.text += "방어력 : " + info.Stat.def + "\n";
+        board.text += "스피드 : " + info.Stat.speed + "\n";
         board.text += "설명 : " + info.description + "\n";
+    }
+    public void SceneStart(string name)
+    {
+        //배틀매니저를 손수 햇더니 메뉴로 돌아갔을때 재시작이 안됨
+        GameManager.inst.LoadScene(name);
     }
     //상황에따라 enable로 개명,일부 이동 가능
     void Start () {

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;//ui그리기 캐릭터 위에 게이지 보여주기
 /// <summary>
 /// 캐릭터 스크립트, 몬스터가 없으니 상속없이 이것 자체만으로 해결함
 /// ai는 여기서 3종류를 떼서 쓰는식으로 할것이고
@@ -48,11 +49,17 @@ public class CharaScript : MonoBehaviour {
     //배틀할때 이걸 그대로 쓸거임
 
     private CharaScriptable info;//나의 정보
+    private Stat stat;
+    //const 할까 했는데 초기화를 안해서안됨
+    private int maxHp;
+    private int maxMp;
 
     [SerializeField]
     private List<OrderScriptableObj> orders;//내가 받은 명령들 
     private int maxOrder = 3;
-
+    private bool dead = false;
+    public bool DeadSwitch = false;
+    public Transform particle;//없으면 안함
     //세분해서 겟하게 하면 좋긴 할텐데 말이지
     public CharaScriptable Info
     {
@@ -61,7 +68,24 @@ public class CharaScript : MonoBehaviour {
             return info;
         }
     }
-    
+    public Stat Status
+    {
+        get { return stat; }
+    }
+    //ai에게 주기위해서
+    public List<OrderScriptableObj> Orders
+    {
+        get { return orders; }
+    }
+    public bool Dead
+    {
+        get { return dead; }
+    }
+    public int MaxHp
+    {
+        get { return maxHp; }
+    }
+    public int MaxMp { get { return maxMp; } }
     public void AddOrder(OrderScriptableObj order)
     {
         for(int i = 0; i < maxOrder; i++)
@@ -75,10 +99,21 @@ public class CharaScript : MonoBehaviour {
         }
     }
     //클릭하면 행할거임
+    public void PayMp(int val)
+    {        
+        stat.mp -= val;
+        if (stat.mp > maxMp) stat.mp = maxMp;
+        else if (stat.mp < 0) stat.mp = 0;
+    }
     public void DelOrder(int cur)
     {
         if (cur >= maxOrder) return;
         orders[cur] = null;
+    }
+    public bool OrderEmpty()
+    {
+        if (orders[0] == null) return true;
+        return false;
     }
     public void ActionOrder()//cur를 안받고 그냥함 맨앞에꺼니깐 이걸 지우고 밀어넣고할듯
     {
@@ -86,17 +121,70 @@ public class CharaScript : MonoBehaviour {
         orders.RemoveAt(0);//이걸로될지? < 안됐음 사이즈를 아예줄여서 2번째부터 오류남
         orders.Add( null );//그래서 사용하고 다시 빈공간을 추가함으로써 순환시킴
     }
-	// Use this for initialization
-	void Start () {
+    //예상한문제가나옴 체력을 공유함 info때문으로 추정 이값을 복제해서 사용할 필요가있는데
+    //이게임은 그래도 다른게임(능력치 100%쓰는(?))게임은 문제
+    //간단하게 스탯복제하는수밖에 더있나?
+    public void GetDamage(int dmg)
+    {
+        if (dmg < stat.def) dmg = stat.def;//뎀지를 +-0로 만듬
+        stat.hp -= ( dmg - stat.def);
+//        Debug.Log("맞은애 체력 " + stat.hp);
+        //체력이 0이면 dead니깐 death를 구동하고 이거 비활성화로 할듯
+        //체력이 0이면? 명령을 다지우고..번거롭게 하지않기위해 death라는걸 true로 만들고
+        if(stat.hp <= 0)
+        {
+            orders = null;
+            gameObject.SetActive(false);//존재를 숨김
+            dead = true;
+        }
+            
+    }
+    //인게임 내에서 체력,마나를 보여주는거
+    /*
+    public void GaugeInGame()
+    {
+        Vector3 uiPos = transform.position;
+        uiPos.y += 4f;
+        uiPos.
+    }
+    */
+    //세이브데이터를 직접적으로 +하지 않고 그냥 숫자로 업그레이드 하기에 퓨어를 붙여봄
+    public void PurePowerUp(int value)
+    {
+        stat.atk += (int)(value * 0.75);
+        stat.def += (int)(value * 0.5);
+        stat.hp += (value * 5);
+        stat.mp += (value * 5);
+    }
+    void Start () {
         /*
         if (charaPath == null) charaPath = "CharaDB";
         charaFile = Resources.Load(charaPath) as TextAsset;
         */
+        //게임 매니저 내의 업그레이드를 합침 여기서하면 플레이어 능력치를 ai도 따간다 어디에 하든 똑같게될듯?
+        //이게 게임 오브젝트니깐 이걸 복제하는 그순간 즉 Ground or 파티매니저에서 하자
+        //has-a를 사용해서 스크립트에다가 추가하는식이 좋을듯
+        if (tag == "P1")
+            stat = info.Stat + GameManager.inst.PlayerInfo.Stat;
+        else if (tag == "P2")
+        {//여기서 적일경우도 추가됨
+            stat = info.Stat;
+            PurePowerUp(GameManager.inst.PlayerInfo.EnemyLevel);
+        }
+        else stat = info.Stat;
+        
+        maxHp = stat.hp;
+        maxMp = stat.mp;
 	}
     
 	
 	// Update is called once per frame
 	void Update () {
-
+        //임시, 죽으면 명령을 그만두고 다음애의 명령을 해야하는 구상
+        if(DeadSwitch == true)
+        {
+            dead = true;
+            gameObject.SetActive(false);//존재를 숨김
+        }
     }
 }
