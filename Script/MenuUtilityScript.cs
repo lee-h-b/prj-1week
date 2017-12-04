@@ -48,6 +48,7 @@ public class MenuUtilityScript : MonoBehaviour {
         if (code == 2) GameManager.inst.PlayerInfo.AddAtk();
         if (code == 3) GameManager.inst.PlayerInfo.AddDef();
         if (code == 4) GameManager.inst.PlayerInfo.SubLevel();
+        WritePlayerData();
     }
     public void Quit()
     {
