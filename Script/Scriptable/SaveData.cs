@@ -28,7 +28,7 @@ public class SaveData : UnitStatSystem{
 
     public void SubLevel()
     {
-        if (point <= 2) return;
+        if (point < 2) return;
         enemyLevel--;
         point -= 2;
     }
