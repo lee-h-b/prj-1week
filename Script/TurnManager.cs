@@ -91,6 +91,7 @@ public class TurnManager : MonoBehaviour {
                 PartyManager.inst.Member2[i].PayMp(-20);//메소드 추가하기 귀찮음
         }
         yield break;
+        //버그 : 다음턴에 가장빠른애가 1player가 되버림 <<플레이어자체가바뀌는듯 소트문제임
     }
     //빠른정렬이 아니라 queue에 넣기 쉽게 정리하는거
     int SpeedSort(CharaScript m1, CharaScript m2)
@@ -104,8 +105,9 @@ public class TurnManager : MonoBehaviour {
     void PushQueues()
     {
         //p2는 아직 이동,공격이먼저
-        var p1 = PartyManager.inst.Member1;
-        var p2 = PartyManager.inst.Member2;
+        //가장 빠른애로 바뀌어서 수정함 이거의문제 깊은복사,얉은복사 문제였음 깊은복사로 바꿔서해결
+        var p1 = PartyManager.inst.Copy(1);
+        var p2 = PartyManager.inst.Copy(2);
         p1.Sort(SpeedSort);
         p2.Sort(SpeedSort);
         for (int i = 0; i < Mathf.Max(p1.Count, p2.Count); i++)

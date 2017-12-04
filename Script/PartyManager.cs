@@ -40,6 +40,19 @@ public class PartyManager : MonoBehaviour {
 
     }
     //멤버추가 pC는 위의 플레이어Cur의 약자
+    public List<CharaScript> Copy(int val)
+    {
+        List<CharaScript> output = new List<CharaScript>();
+        List<CharaScript> target;
+        if (val % 2 == 1)
+            target = Member1;
+        else target = Member2;
+        for(int i = 0; i<target.Count; i++)
+        {
+            output.Add(target[i]);
+        }
+        return output;
+    }
     public void AddMember(CharaScript member, int pC =1)
     {
         if (pC % 2 == 1)
